@@ -23,7 +23,7 @@ demo.state0.prototype = {
     game.physics.startSystem(Phaser.Physics.ARCADE);
     game.stage.backgroundColor = "#800080";
     addChangeStateEventListeners();
-    game.world.setBounds(0, 0, 2813, 1000);
+    game.world.setBounds(0, 0, 8813, 1000);
     game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
     var treeBG = game.add.sprite(0, 0, "tree");
     adam = game.add.sprite(centerX, centerY, "adam");
@@ -33,6 +33,7 @@ demo.state0.prototype = {
     adam.body.collideWorldBounds = true;
     adam.animations.add("walk", [0, 1, 2, 3, 4]);
     adam.animations.add("punch", [5, 6, 7, 8, 9]);
+    adam.animations.add("cruthc", [10]);
 
     game.camera.follow(adam);
     game.camera.deadzone = new Phaser.Rectangle(centerX - 300, 0, 600, 1000);
@@ -58,6 +59,9 @@ demo.state0.prototype = {
     } else if (game.input.keyboard.isDown(Phaser.Keyboard.F)) {
       console.log("punch");
       adam.animations.play("punch", 14, true);
+    } else if (game.input.keyboard.isDown(Phaser.Keyboard.C)) {
+      console.log("punch");
+      adam.animations.play("cruthc", 14, true);
     } else {
       adam.animations.stop("walk");
       adam.frame = 0;
