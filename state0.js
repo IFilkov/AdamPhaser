@@ -8,16 +8,11 @@ demo.state0.prototype = {
   preload: function () {
     game.load.spritesheet(
       "adam",
-      // "assets/spritesheets/adamSheet.png",
       "assets/spritesheets/adamSheet2.png",
       240,
       370
     );
-    game.load.image(
-      "tree",
-      "assets/backgrounds/treeBG.png"
-      // "assets/spritesheets/adamSheetPunch.png"
-    );
+    game.load.image("tree", "assets/backgrounds/treeBG.png");
   },
   create: function () {
     game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -26,9 +21,29 @@ demo.state0.prototype = {
     game.world.setBounds(0, 0, 8813, 1000);
     game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
     var treeBG = game.add.sprite(0, 0, "tree");
+
     adam = game.add.sprite(centerX, centerY, "adam");
+    enemy1 = game.add.sprite(240, 370, "adam");
+
+    // Настроим масштаб спрайтов
+    adam.scale.setTo(0.4, 0.4); // Масштаб героя
+    enemy1.scale.setTo(0.8, 0.8); // Масштаб объекта enemy1, сделаем его меньше
+
+    // Анимация для enemy1
+    enemy1.animations.add("walk", [0, 1, 2, 3, 4]);
+
+    // Твин с анимацией ходьбы
+    var tween = game.add
+      .tween(enemy1.anchor)
+      .to({ x: 1 }, 1000, "Linear", true, 1000, false, true)
+      // .to({ x: 700 }, 3000, "Linear", true, 0, -1, true);
+      .loop(true);
+
+    tween.onLoop.add(function () {
+      enemy1.animations.play("walk", 14, true);
+    }, this);
+
     adam.anchor.setTo(0.5, 0.5);
-    adam.scale.setTo(0.7, 0.7);
     game.physics.enable(adam);
     adam.body.collideWorldBounds = true;
     adam.animations.add("walk", [0, 1, 2, 3, 4]);
@@ -37,14 +52,27 @@ demo.state0.prototype = {
 
     game.camera.follow(adam);
     game.camera.deadzone = new Phaser.Rectangle(centerX - 300, 0, 600, 1000);
+
+    // Флаг для отслеживания направления героя
+    this.facingRight = true;
+    // Сохраняем начальный масштаб
+    this.initialScale = { x: 0.4, y: 0.4 };
   },
   update: function () {
     if (game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
-      adam.scale.setTo(0.7, 0.7);
+      if (!this.facingRight) {
+        // Если герой был повернут влево, изменяем только ось X, не трогая масштаб Y
+        adam.scale.setTo(this.initialScale.x, this.initialScale.y);
+        this.facingRight = true; // Обновляем флаг
+      }
       adam.x += speed;
       adam.animations.play("walk", 14, true);
     } else if (game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
-      adam.scale.setTo(-0.7, 0.7);
+      if (this.facingRight) {
+        // Если герой был повернут вправо, отразим его только по оси X
+        adam.scale.setTo(-this.initialScale.x, this.initialScale.y);
+        this.facingRight = false; // Обновляем флаг
+      }
       adam.x -= speed;
       adam.animations.play("walk", 14, true);
     } else if (game.input.keyboard.isDown(Phaser.Keyboard.UP)) {
@@ -57,10 +85,8 @@ demo.state0.prototype = {
       adam.y += speed;
       adam.animations.play("walk", 14, true);
     } else if (game.input.keyboard.isDown(Phaser.Keyboard.F)) {
-      console.log("punch");
       adam.animations.play("punch", 14, true);
     } else if (game.input.keyboard.isDown(Phaser.Keyboard.C)) {
-      console.log("punch");
       adam.animations.play("cruthc", 14, true);
     } else {
       adam.animations.stop("walk");
