@@ -8,16 +8,11 @@ demo.state0.prototype = {
   preload: function () {
     game.load.spritesheet(
       "adam",
-      // "assets/spritesheets/adamSheet.png",
       "assets/spritesheets/adamSheet2.png",
       240,
       370
     );
-    game.load.image(
-      "tree",
-      "assets/backgrounds/treeBG.png"
-      // "assets/spritesheets/adamSheetPunch.png"
-    );
+    game.load.image("tree", "assets/backgrounds/treeBG.png");
   },
   create: function () {
     game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -26,25 +21,70 @@ demo.state0.prototype = {
     game.world.setBounds(0, 0, 8813, 1000);
     game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
     var treeBG = game.add.sprite(0, 0, "tree");
+
     adam = game.add.sprite(centerX, centerY, "adam");
-    adam.anchor.setTo(0.5, 0.5);
-    adam.scale.setTo(0.7, 0.7);
-    game.physics.enable(adam);
+    enemy1 = game.add.sprite(240, 370, "adam");
+
+    // Включаем физику для adam и enemy1
+    game.physics.enable([adam, enemy1]);
+
+    // Добавляем столкновение с границами мира
     adam.body.collideWorldBounds = true;
+    enemy1.body.collideWorldBounds = true;
+
+    // Настраиваем масштаб спрайтов
+    adam.scale.setTo(0.4, 0.4); // Масштаб героя
+    enemy1.scale.setTo(0.8, 0.8); // Масштаб объекта enemy1
+
+    // Анимации для enemy1 и adam
+    enemy1.animations.add("walk", [0, 1, 2, 3, 4]);
     adam.animations.add("walk", [0, 1, 2, 3, 4]);
     adam.animations.add("punch", [5, 6, 7, 8, 9]);
     adam.animations.add("cruthc", [10]);
 
-    game.camera.follow(adam);
-    game.camera.deadzone = new Phaser.Rectangle(centerX - 300, 0, 600, 1000);
+    // Запускаем анимацию enemy1
+    enemy1.animations.play("walk", 14, true);
+
+    // Твин для движения enemy1
+    this.tween = game.add
+      .tween(enemy1)
+      .to({ x: 700 }, 3000, "Linear", true, 0, -1, true);
+
+    // Определим направление движения enemy1
+    this.enemyFacingRight = true;
+
+    // Разворот при смене направления
+    this.tween.onLoop.add(function () {
+      enemy1.scale.x *= -1;
+    }, this);
+
+    adam.anchor.setTo(0.5, 0.5);
+
+    // Флаг для отслеживания направления героя
+    this.facingRight = true;
+    // Сохраняем начальный масштаб
+    this.initialScale = { x: 0.4, y: 0.4 };
+
+    // Флаг для коллизии
+    this.inCollision = false;
   },
   update: function () {
+    // Проверка на пересечение между adam и enemy1
+    game.physics.arcade.overlap(adam, enemy1, this.handleCollision, null, this);
+
+    // Управление движением adam
     if (game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
-      adam.scale.setTo(0.7, 0.7);
+      if (!this.facingRight) {
+        adam.scale.setTo(this.initialScale.x, this.initialScale.y);
+        this.facingRight = true;
+      }
       adam.x += speed;
       adam.animations.play("walk", 14, true);
     } else if (game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
-      adam.scale.setTo(-0.7, 0.7);
+      if (this.facingRight) {
+        adam.scale.setTo(-this.initialScale.x, this.initialScale.y);
+        this.facingRight = false;
+      }
       adam.x -= speed;
       adam.animations.play("walk", 14, true);
     } else if (game.input.keyboard.isDown(Phaser.Keyboard.UP)) {
@@ -57,14 +97,43 @@ demo.state0.prototype = {
       adam.y += speed;
       adam.animations.play("walk", 14, true);
     } else if (game.input.keyboard.isDown(Phaser.Keyboard.F)) {
-      console.log("punch");
       adam.animations.play("punch", 14, true);
-    } else if (game.input.keyboard.isDown(Phaser.Keyboard.C)) {
       console.log("punch");
+    } else if (game.input.keyboard.isDown(Phaser.Keyboard.C)) {
       adam.animations.play("cruthc", 14, true);
     } else {
       adam.animations.stop("walk");
       adam.frame = 0;
+    }
+
+    // Если нет столкновения, enemy1 продолжает движение
+    if (!this.inCollision) {
+      enemy1.animations.play("walk", 14, true);
+    }
+  },
+  handleCollision: function (adam, enemy1) {
+    // Остановка движения enemy1
+    this.tween.pause();
+    enemy1.body.velocity.x = 0;
+
+    // Флаг для отслеживания коллизии
+    this.inCollision = true;
+
+    // Разворот enemy1 лицом к adam
+    if (adam.x > enemy1.x) {
+      enemy1.scale.setTo(0.8, 0.8); // enemy1 смотрит вправо
+    } else {
+      enemy1.scale.setTo(-0.8, 0.8); // enemy1 смотрит влево
+    }
+
+    // Проверка на выход из коллизии
+    this.checkCollisionExit(adam, enemy1);
+  },
+  checkCollisionExit: function (adam, enemy1) {
+    // Если adam вышел из коллизии, продолжаем движение enemy1
+    if (Math.abs(adam.x - enemy1.x) > 100) {
+      this.inCollision = false;
+      this.tween.resume(); // enemy1 продолжает движение
     }
   },
 };
