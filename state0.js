@@ -36,30 +36,19 @@ demo.state0.prototype = {
     // Анимация для enemy1
     enemy1.animations.add("walk", [0, 1, 2, 3, 4]);
 
-    // Создаем переменную для хранения предыдущей позиции enemy1
-    enemy1.prevX = enemy1.x;
+    // Запускаем анимацию сразу при создании
+    enemy1.animations.play("walk", 14, true);
 
-    // Твин с анимацией ходьбы
+    // Твин для движения enemy1
     var tween = game.add
       .tween(enemy1)
-      .to({ x: 700 }, 3000, "Linear", true, 0, -1, true); // Враг движется туда и обратно
+      .to({ x: 700 }, 3000, "Linear", true, 0, -1, true); // Движение туда и обратно
 
-    tween.onUpdateCallback(function () {
-      // Запускаем анимацию ходьбы
-      enemy1.animations.play("walk", 14, true);
-
-      // Определяем направление врага, сравнивая текущую и предыдущую позицию
-      if (enemy1.x > enemy1.prevX) {
-        // Если движется вправо
-        enemy1.scale.setTo(0.8, 0.8); // Разворачиваем вправо
-      } else if (enemy1.x < enemy1.prevX) {
-        // Если движется влево
-        enemy1.scale.setTo(-0.8, 0.8); // Разворачиваем влево
-      }
-
-      // Обновляем предыдущую позицию
-      enemy1.prevX = enemy1.x;
-    });
+    // Добавляем обработку события на завершение движения в одну сторону
+    tween.onLoop.add(function () {
+      // Поворачиваем enemy1 при каждом изменении направления
+      enemy1.scale.x *= -1;
+    }, this);
 
     adam.anchor.setTo(0.5, 0.5);
     game.physics.enable(adam);
