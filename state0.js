@@ -42,6 +42,10 @@ demo.state0.prototype = {
     adam.animations.add("punch", [5, 6, 7, 8, 9]);
     adam.animations.add("cruthc", [10]);
 
+    //Установка камеры
+    game.camera.follow(adam);
+    game.camera.deadzone = new Phaser.Rectangle(centerX - 300, 0, 600, 1000);
+
     // Запускаем анимацию enemy1
     enemy1.animations.play("walk", 14, true);
 
